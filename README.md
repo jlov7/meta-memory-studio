@@ -30,9 +30,9 @@
 ![License](https://img.shields.io/badge/license-MIT-8b5cf6?style=flat-square)
 ![uv](https://img.shields.io/badge/managed%20by-uv-DE5FE9?style=flat-square)
 ![pnpm](https://img.shields.io/badge/pnpm-latest-F69220?style=flat-square&logo=pnpm&logoColor=white)
-![CI](https://github.com/jlov7/meta-memory-studio/actions/workflows/ci.yml/badge.svg)
-![Security](https://github.com/jlov7/meta-memory-studio/actions/workflows/security.yml/badge.svg)
-![Release](https://github.com/jlov7/meta-memory-studio/actions/workflows/release-please.yml/badge.svg)
+![Quality Gate](https://img.shields.io/badge/quality%20gate-make%20verify-16a34a?style=flat-square)
+![Security](https://img.shields.io/badge/security-policy%20%2B%20scan%20workflow-0ea5e9?style=flat-square)
+![Release](https://img.shields.io/badge/release-Release%20Please%20(Manual)-f59e0b?style=flat-square)
 
 </div>
 

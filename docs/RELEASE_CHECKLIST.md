@@ -2,6 +2,12 @@
 
 Use this checklist before cutting a release tag.
 
+## Execution mode
+
+This repository is currently configured for a no-cost private workflow:
+- GitHub Actions workflows are manual-only (`workflow_dispatch`).
+- Day-to-day verification is expected locally via `make verify`.
+
 ## Pre-flight
 
 - [ ] `git status` is clean on `main`.
