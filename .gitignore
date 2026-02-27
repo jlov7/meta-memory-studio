@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+
+# Database
+metamemory.db
+metamemory.db-journal
+metamemory.db-wal
+metamemory.db-shm
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+test-results/
+playwright-report/
+
+# Planning artifact (ChatGPT-generated starter pack)
+meta-memory-studio-starter-pack/
+
+# Cursor
+.specstory/
+.cursorindexingignore

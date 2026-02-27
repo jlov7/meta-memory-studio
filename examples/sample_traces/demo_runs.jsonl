@@ -1,0 +1,23 @@
+{"type": "run_start", "ts": "2026-02-26T09:00:00Z", "payload": {"run_id": "run_demo_001", "agent": "demo_agent", "workspace": "demo"}}
+{"type": "user_message", "ts": "2026-02-26T09:00:05Z", "payload": {"text": "Book me a flight to SF next week, aisle seat, under $500."}}
+{"type": "tool_call", "ts": "2026-02-26T09:00:10Z", "payload": {"tool": "search_flights", "args": {"to": "SFO", "date_range": "next_week", "seat": "aisle", "max_price": 500}}}
+{"type": "tool_result", "ts": "2026-02-26T09:00:12Z", "payload": {"tool": "search_flights", "result": {"options": [{"id": "F1", "price": 480}, {"id": "F2", "price": 520}]}}}
+{"type": "assistant_message", "ts": "2026-02-26T09:00:15Z", "payload": {"text": "Found option F1 for $480. Want me to book it?"}}
+{"type": "user_message", "ts": "2026-02-26T09:01:00Z", "payload": {"text": "Yes, book it. Also I prefer United when possible."}}
+{"type": "tool_call", "ts": "2026-02-26T09:01:05Z", "payload": {"tool": "book_flight", "args": {"option_id": "F1", "airline_preference": "United"}}}
+{"type": "tool_result", "ts": "2026-02-26T09:01:07Z", "payload": {"tool": "book_flight", "error": {"code": "AIRLINE_MISMATCH", "message": "F1 is Delta; cannot apply United preference retroactively."}}}
+{"type": "assistant_message", "ts": "2026-02-26T09:01:10Z", "payload": {"text": "Booking failed because F1 is Delta. I should have applied airline preference earlier. I can re-search for United options under $500."}}
+{"type": "memory_write_candidate", "ts": "2026-02-26T09:01:12Z", "payload": {"kind": "experience", "title": "Apply airline preference before booking", "lesson": "When user states airline preference, re-run search before booking; do not pass preference at booking time if option airline differs.", "source": {"run_id": "run_demo_001", "step": "book_flight"}}}
+{"type": "user_feedback", "ts": "2026-02-26T09:01:20Z", "payload": {"rating": "down", "comment": "Yes, re-search first next time."}}
+{"type": "run_end", "ts": "2026-02-26T09:01:25Z", "payload": {"run_id": "run_demo_001", "status": "fail"}}
+{"type": "run_start", "ts": "2026-02-26T10:00:00Z", "payload": {"run_id": "run_demo_002", "agent": "demo_agent", "workspace": "demo"}}
+{"type": "user_message", "ts": "2026-02-26T10:00:05Z", "payload": {"text": "Book me a flight to SF next week, aisle seat, under $500. I prefer United."}}
+{"type": "memory_retrieval", "ts": "2026-02-26T10:00:06Z", "payload": {"query": "airline preference before booking", "candidates": [{"memory_id": "mem_001", "score": 0.92, "title": "Apply airline preference before booking"}], "selected": ["mem_001"]}}
+{"type": "assistant_message", "ts": "2026-02-26T10:00:08Z", "payload": {"text": "Got it. I'll search United options first to avoid rework."}}
+{"type": "tool_call", "ts": "2026-02-26T10:00:12Z", "payload": {"tool": "search_flights", "args": {"to": "SFO", "date_range": "next_week", "seat": "aisle", "max_price": 500, "airline": "United"}}}
+{"type": "tool_result", "ts": "2026-02-26T10:00:14Z", "payload": {"tool": "search_flights", "result": {"options": [{"id": "U1", "price": 495, "airline": "United"}]}}}
+{"type": "tool_call", "ts": "2026-02-26T10:00:18Z", "payload": {"tool": "book_flight", "args": {"option_id": "U1"}}}
+{"type": "tool_result", "ts": "2026-02-26T10:00:20Z", "payload": {"tool": "book_flight", "result": {"confirmation": "ABC123"}}}
+{"type": "assistant_message", "ts": "2026-02-26T10:00:25Z", "payload": {"text": "Booked United flight U1 for $495. Confirmation ABC123."}}
+{"type": "user_feedback", "ts": "2026-02-26T10:00:30Z", "payload": {"rating": "up", "comment": "Perfect."}}
+{"type": "run_end", "ts": "2026-02-26T10:00:35Z", "payload": {"run_id": "run_demo_002", "status": "success"}}
