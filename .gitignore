@@ -44,3 +44,6 @@ meta-memory-studio-starter-pack/
 # Cursor
 .specstory/
 .cursorindexingignore
+
+# Codex planning artifacts
+.codex/logs/

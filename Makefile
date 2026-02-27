@@ -1,4 +1,13 @@
-.PHONY: dev backend frontend check test e2e demo
+.PHONY: install install-hooks dev backend frontend check test e2e verify screenshots demo
+
+install:
+	cd backend && uv sync --group dev
+	cd frontend && pnpm install
+
+install-hooks:
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+	@echo "Git hooks installed from .githooks/"
 
 dev:
 	@echo "Starting backend + frontend"
@@ -20,6 +29,11 @@ test:
 
 e2e:
 	cd frontend && pnpm exec playwright install --with-deps && pnpm e2e
+
+verify: check test e2e
+
+screenshots:
+	./scripts/capture_readme_gallery.sh
 
 demo:
 	cd backend && uv run python ../scripts/import_demo.py --input ../examples/sample_traces

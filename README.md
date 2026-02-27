@@ -30,8 +30,20 @@
 ![License](https://img.shields.io/badge/license-MIT-8b5cf6?style=flat-square)
 ![uv](https://img.shields.io/badge/managed%20by-uv-DE5FE9?style=flat-square)
 ![pnpm](https://img.shields.io/badge/pnpm-latest-F69220?style=flat-square&logo=pnpm&logoColor=white)
+![CI](https://github.com/jlov7/meta-memory-studio/actions/workflows/ci.yml/badge.svg)
+![Security](https://github.com/jlov7/meta-memory-studio/actions/workflows/security.yml/badge.svg)
+![Release](https://github.com/jlov7/meta-memory-studio/actions/workflows/release-please.yml/badge.svg)
 
 </div>
+
+---
+
+## Product Gallery
+
+![Landing page](docs/assets/screenshots/landing.png)
+![Workspace overview](docs/assets/screenshots/workspace-overview.png)
+![Memory library](docs/assets/screenshots/memory-library.png)
+![Drift dashboard](docs/assets/screenshots/drift-dashboard.png)
 
 ---
 
@@ -203,13 +215,13 @@ sequenceDiagram
     participant P as Policy Engine
     participant U as UI
 
-    T->>I: POST /ingest (multipart JSONL)
+    T->>I: POST /workspaces/{id}/import (multipart JSONL)
     I->>I: validate · hash · detect PII
     I->>M: store raw events + episodes
     I->>M: construct MemoryItems from write_candidates
     I-->>U: ImportResult { run_count, memory_count, hash_valid }
 
-    U->>E: POST /evolve
+    U->>E: POST /workspaces/{id}/policy/evolve
     E->>M: fetch baseline run (fail, score=0.0)
     E->>M: fetch guided run (success, score=1.0)
     E->>M: write ContributionEvent (delta=+1.0)
@@ -239,7 +251,7 @@ sequenceDiagram
 ### 1 — Clone and enter
 
 ```bash
-git clone https://github.com/your-org/metamemory-studio
+git clone https://github.com/jlov7/meta-memory-studio
 cd "metamemory-studio"
 ```
 
@@ -258,7 +270,13 @@ ENABLE_EVOLUTION=true
 CORS_ORIGINS=http://localhost:3000
 ```
 
-### 3 — Start the dev servers
+### 3 — Install dependencies
+
+```bash
+make install
+```
+
+### 4 — Start the dev servers
 
 ```bash
 make dev
@@ -268,7 +286,7 @@ This starts:
 - **Backend** at `http://localhost:8000` (FastAPI + Uvicorn, hot-reload)
 - **Frontend** at `http://localhost:3000` (Next.js, hot-reload)
 
-### 4 — Load the demo trace
+### 5 — Load the demo trace
 
 In a separate terminal:
 
@@ -281,7 +299,7 @@ This:
 2. Uploads `examples/sample_traces/demo_runs.jsonl` (a realistic travel-booking agent trace)
 3. Runs `evolve` to score contributions and update memory weights
 
-### 5 — Open the UI
+### 6 — Open the UI
 
 Navigate to **http://localhost:3000** and select the **Demo** workspace.
 
@@ -327,24 +345,27 @@ All endpoints are prefixed with `/api`. OpenAPI docs available at `http://localh
 |---|---|---|
 | `GET` | `/workspaces` | List all workspaces |
 | `POST` | `/workspaces` | Create workspace `{ name }` |
-| `GET` | `/workspaces/{id}` | Get workspace by ID |
 
 ### Ingest
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/workspaces/{id}/ingest` | Upload JSONL trace (multipart) |
+| `POST` | `/workspaces/{id}/import` | Upload JSONL trace (multipart) |
 | `POST` | `/workspaces/{id}/import/demo` | Load built-in demo trace |
-| `POST` | `/workspaces/{id}/evolve` | Run contribution scoring + weight updates |
 | `GET` | `/workspaces/{id}/integrity` | Verify hash chain of all runs |
+
+### Policy
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/workspaces/{id}/policy/evolve` | Run contribution scoring + weight updates |
 
 ### Runs
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/workspaces/{id}/runs` | List runs (paginated) |
+| `GET` | `/workspaces/{id}/runs` | List runs |
 | `GET` | `/workspaces/{id}/runs/{run_id}` | Run detail with timeline |
-| `GET` | `/workspaces/{id}/runs/{run_id}/events` | Raw event stream for a run |
 
 ### Memory
 
@@ -532,6 +553,12 @@ metamemory-studio/
 ## Development Commands
 
 ```bash
+# Install backend + frontend dependencies
+make install
+
+# Install local git hooks (optional but recommended)
+make install-hooks
+
 # Start everything (backend + frontend, hot-reload)
 make dev
 
@@ -547,8 +574,14 @@ make check
 # Run all tests
 make test
 
-# Run E2E tests (requires running servers)
+# Run E2E tests (spawns test web servers automatically)
 make e2e
+
+# Run full quality gate
+make verify
+
+# Refresh README screenshot gallery assets
+make screenshots
 
 # Load demo data into running backend
 make demo
@@ -663,6 +696,6 @@ MIT © 2026 MetaMemory Studio Contributors
 
 *Built with [FastAPI](https://fastapi.tiangolo.com/), [Next.js](https://nextjs.org/), and a deep conviction that agents deserve better memory hygiene.*
 
-**[Documentation](docs/) · [API Reference](http://localhost:8000/docs) · [Report a Bug](https://github.com/your-org/metamemory-studio/issues)**
+**[Documentation](docs/) · [API Reference](http://localhost:8000/docs) · [Report a Bug](https://github.com/jlov7/meta-memory-studio/issues)**
 
 </div>

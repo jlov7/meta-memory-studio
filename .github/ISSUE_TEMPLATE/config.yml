@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/jlov7/meta-memory-studio/security/advisories/new
+    about: Report vulnerabilities privately via GitHub security advisories.

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] Running backend and frontend quality checks..."
+make check
+make test
+
+echo "[pre-commit] OK"

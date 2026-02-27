@@ -1,0 +1,11 @@
+# Default ownership
+* @jlov7
+
+# Backend
+/backend/ @jlov7
+
+# Frontend
+/frontend/ @jlov7
+
+# CI and release automation
+/.github/ @jlov7

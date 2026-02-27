@@ -41,7 +41,7 @@ Be excellent to each other. We enforce the [Contributor Covenant](https://www.co
 | New feature | Discussion → agreement on design → implementation PR |
 | Documentation | Edit files in `docs/` or `README.md` — clarity is a feature |
 | Performance | Benchmark before and after, include numbers in PR description |
-| Security | **Do not open a public issue.** Email `security@metamemory.dev` |
+| Security | **Do not open a public issue.** Use the private advisory flow in `SECURITY.md` |
 
 ---
 
@@ -53,7 +53,7 @@ Be excellent to each other. We enforce the [Contributor Covenant](https://www.co
 |---|---|---|
 | Python | ≥ 3.11 | via `pyenv` or system |
 | `uv` | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Node.js | ≥ 22 | via `fnm` or `nvm` |
+| Node.js | ≥ 20 | via `fnm` or `nvm` |
 | `pnpm` | ≥ 9 | `npm i -g pnpm` or `corepack enable` |
 | Git | any | |
 
@@ -61,7 +61,7 @@ Be excellent to each other. We enforce the [Contributor Covenant](https://www.co
 
 ```bash
 # Clone
-git clone https://github.com/your-org/metamemory-studio.git
+git clone https://github.com/jlov7/meta-memory-studio.git
 cd metamemory-studio
 
 # Copy environment config
@@ -69,6 +69,7 @@ cp .env.example .env
 
 # Install everything and start both servers
 make install
+make install-hooks
 make dev
 ```
 
@@ -126,7 +127,7 @@ Key design invariants:
 # Fork on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/metamemory-studio.git
 cd metamemory-studio
-git remote add upstream https://github.com/your-org/metamemory-studio.git
+git remote add upstream https://github.com/jlov7/meta-memory-studio.git
 
 # Create a feature branch
 git checkout -b feat/my-feature
@@ -500,6 +501,6 @@ If you believe a decision is wrong, open a **Discussion** (not a PR) and make th
 
 - **GitHub Discussions** — design questions, feature ideas
 - **GitHub Issues** — bug reports
-- **Security** — `security@metamemory.dev` (private)
+- **Security** — follow [SECURITY.md](SECURITY.md) and submit a private advisory
 
 We read everything. Response time goal: 48 hours.
