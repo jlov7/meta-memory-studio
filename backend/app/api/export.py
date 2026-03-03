@@ -13,6 +13,7 @@ from app.database import get_db
 from app.ingest.pii import EMAIL_RE, PHONE_RE, SSN_RE
 from app.models.memory import MemoryItem, WeightUpdate
 from app.models.runs import Run
+from app.security.rate_limit import MutatingRateLimit
 
 router = APIRouter(prefix="/workspaces/{workspace_id}/export", tags=["export"])
 
@@ -72,6 +73,7 @@ def _build_summary(
 @router.post("/review-pack")
 def export_review_pack(
     workspace_id: str,
+    _rate_limit: None = MutatingRateLimit,
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     memories = list(

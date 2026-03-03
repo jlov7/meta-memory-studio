@@ -1,10 +1,10 @@
 """Memory CRUD endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, func, select
 
+from app.api.errors import http_error
 from app.database import get_db
-from app.memory.retrieval import search_memories
 from app.models.memory import (
     ContributionEvent,
     MemoryItem,
@@ -21,6 +21,7 @@ from app.schemas.memory import (
     ThemeGroupList,
     WeightUpdateOut,
 )
+from app.security.rate_limit import MutatingRateLimit
 
 router = APIRouter(prefix="/workspaces/{workspace_id}/memory", tags=["memory"])
 
@@ -44,24 +45,69 @@ def list_memories(
     q: str = Query(default="", description="Search query"),
     status: str = Query(default="active", description="Filter by status"),
     memory_type: str = Query(default="", description="Filter by type"),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> MemoryList:
+    total = 0
     if q:
-        items = search_memories(db, workspace_id, q)
+        from sqlalchemy import text
+
+        rows = db.exec(  # type: ignore[call-overload]
+            text(
+                "SELECT memory_item_id, rank FROM memory_items_fts "
+                "WHERE memory_items_fts MATCH :query "
+                "ORDER BY rank"
+            ),
+            params={"query": q},
+        ).all()
+        ids = [row[0] for row in rows]
+        rank_map = {row[0]: abs(row[1]) for row in rows}
+
+        if ids:
+            stmt = select(MemoryItem).where(MemoryItem.id.in_(ids))  # type: ignore[attr-defined]
+            stmt = stmt.where(MemoryItem.workspace_id == workspace_id)
+            if status:
+                stmt = stmt.where(MemoryItem.status == status)
+            if memory_type:
+                stmt = stmt.where(MemoryItem.memory_type == memory_type)
+            items = list(db.exec(stmt).all())
+            items.sort(
+                key=lambda m: (
+                    -(rank_map.get(m.id, 0) * m.current_weight),
+                    m.id,
+                )
+            )
+        else:
+            items = []
+        total = len(items)
+        items = items[offset : offset + limit]
     else:
-        stmt = (
-            select(MemoryItem)
+        total_stmt = (
+            select(func.count())
+            .select_from(MemoryItem)
             .where(MemoryItem.workspace_id == workspace_id)
-            .where(MemoryItem.status == status)
         )
+        if status:
+            total_stmt = total_stmt.where(MemoryItem.status == status)
+        if memory_type:
+            total_stmt = total_stmt.where(MemoryItem.memory_type == memory_type)
+        total = db.exec(total_stmt).one()
+
+        stmt = select(MemoryItem).where(MemoryItem.workspace_id == workspace_id)
+        if status:
+            stmt = stmt.where(MemoryItem.status == status)
         if memory_type:
             stmt = stmt.where(MemoryItem.memory_type == memory_type)
-        stmt = stmt.order_by(MemoryItem.current_weight.desc())  # type: ignore[attr-defined]
+        stmt = stmt.order_by(MemoryItem.current_weight.desc(), MemoryItem.id.asc())  # type: ignore[attr-defined]
+        stmt = stmt.offset(offset).limit(limit)
         items = list(db.exec(stmt).all())
 
     return MemoryList(
         memories=[_memory_out(m) for m in items],
-        total=len(items),
+        total=total,
+        limit=limit,
+        offset=offset,
     )
 
 
@@ -93,7 +139,11 @@ def get_memory(
 ) -> MemoryDetail:
     memory = db.get(MemoryItem, memory_id)
     if not memory or memory.workspace_id != workspace_id:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise http_error(
+            status_code=404,
+            code="memory_not_found",
+            message="Memory not found.",
+        )
 
     weight_history = list(
         db.exec(
@@ -151,11 +201,16 @@ def get_memory(
 def deprecate_memory(
     workspace_id: str,
     memory_id: str,
+    _rate_limit: None = MutatingRateLimit,
     db: Session = Depends(get_db),
 ) -> MemoryOut:
     memory = soft_delete(db, memory_id)
     if not memory or memory.workspace_id != workspace_id:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise http_error(
+            status_code=404,
+            code="memory_not_found",
+            message="Memory not found.",
+        )
     return _memory_out(memory)
 
 
@@ -163,13 +218,22 @@ def deprecate_memory(
 def forget_memory(
     workspace_id: str,
     memory_id: str,
+    _rate_limit: None = MutatingRateLimit,
     db: Session = Depends(get_db),
 ) -> dict[str, bool]:
     memory = db.get(MemoryItem, memory_id)
     if not memory or memory.workspace_id != workspace_id:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise http_error(
+            status_code=404,
+            code="memory_not_found",
+            message="Memory not found.",
+        )
 
     success = hard_delete(db, memory_id)
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to delete memory")
+        raise http_error(
+            status_code=500,
+            code="memory_delete_failed",
+            message="Failed to delete memory.",
+        )
     return {"deleted": True}

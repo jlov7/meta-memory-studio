@@ -37,6 +37,9 @@ def setup_db():
     """Create all tables + FTS5 before each test, drop after."""
     SQLModel.metadata.create_all(TEST_ENGINE)
     _create_fts5(TEST_ENGINE)
+    from app.security.rate_limit import rate_limiter
+
+    rate_limiter.clear()
     yield
     SQLModel.metadata.drop_all(TEST_ENGINE)
     with TEST_ENGINE.connect() as conn:

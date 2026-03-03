@@ -19,6 +19,8 @@ class MemoryOut(BaseModel):
 class MemoryList(BaseModel):
     memories: list[MemoryOut]
     total: int
+    limit: int
+    offset: int
 
 
 class WeightUpdateOut(BaseModel):

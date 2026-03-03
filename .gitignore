@@ -17,6 +17,8 @@ metamemory.db
 metamemory.db-journal
 metamemory.db-wal
 metamemory.db-shm
+backups/
+sbom/
 
 # Environment
 .env

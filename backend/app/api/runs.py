@@ -1,8 +1,10 @@
 """Run listing, detail, and timeline endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import text
+from sqlmodel import Session, func, select
 
+from app.api.errors import http_error
 from app.database import get_db
 from app.models.runs import Run, Step
 from app.schemas.runs import RunDetail, RunList, RunSummary, TimelineStep
@@ -11,10 +13,22 @@ router = APIRouter(prefix="/workspaces/{workspace_id}/runs", tags=["runs"])
 
 
 @router.get("", response_model=RunList)
-def list_runs(workspace_id: str, db: Session = Depends(get_db)) -> RunList:
+def list_runs(
+    workspace_id: str,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+) -> RunList:
+    total = db.exec(
+        select(func.count()).select_from(Run).where(Run.workspace_id == workspace_id)
+    ).one()
     runs = list(
         db.exec(
-            select(Run).where(Run.workspace_id == workspace_id).order_by(Run.started_at.desc())  # type: ignore[union-attr]
+            select(Run)
+            .where(Run.workspace_id == workspace_id)
+            .order_by(text("started_at DESC"), text("id DESC"))
+            .offset(offset)
+            .limit(limit)
         ).all()
     )
     summaries = [
@@ -30,14 +44,14 @@ def list_runs(workspace_id: str, db: Session = Depends(get_db)) -> RunList:
         )
         for r in runs
     ]
-    return RunList(runs=summaries, total=len(summaries))
+    return RunList(runs=summaries, total=total, limit=limit, offset=offset)
 
 
 @router.get("/{run_id}", response_model=RunDetail)
 def get_run(workspace_id: str, run_id: str, db: Session = Depends(get_db)) -> RunDetail:
     run = db.get(Run, run_id)
     if not run or run.workspace_id != workspace_id:
-        raise HTTPException(status_code=404, detail="Run not found")
+        raise http_error(status_code=404, code="run_not_found", message="Run not found.")
 
     steps = list(
         db.exec(

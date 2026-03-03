@@ -62,15 +62,21 @@ def test_pipeline_creates_memories(session: Session, demo_jsonl: str):
 
 
 def test_pipeline_idempotent_filename(session: Session, demo_jsonl: str):
-    """Importing the same file twice deduplicates memories via deterministic IDs."""
-    run_pipeline(session, "ws_test", "demo_runs.jsonl", demo_jsonl)
-    run_pipeline(session, "ws_test", "demo_runs.jsonl", demo_jsonl)
+    """Importing identical content returns duplicate metadata and no extra rows."""
+    first = run_pipeline(session, "ws_test", "demo_runs.jsonl", demo_jsonl)
+    second = run_pipeline(session, "ws_test", "demo_runs.jsonl", demo_jsonl)
 
     raw_files = session.exec(select(RawFile)).all()
-    # Second import creates a new raw file record (different hash chain ID)
-    assert len(raw_files) == 2
+    assert len(raw_files) == 1
 
-    # But memories deduplicate via deterministic IDs
+    assert first["success"] is True
+    assert first["duplicate"] is False
+    assert second["success"] is True
+    assert second["duplicate"] is True
+    assert second["raw_file_id"] == first["raw_file_id"]
+    assert second["duplicate_of_raw_file_id"] == first["raw_file_id"]
+
+    # Memory construction is not repeated on duplicate ingest.
     memories = session.exec(select(MemoryItem)).all()
     titles = [m.title for m in memories]
     assert titles.count("Apply airline preference before booking") == 1

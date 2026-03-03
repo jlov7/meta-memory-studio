@@ -1,4 +1,5 @@
-.PHONY: install install-hooks dev backend frontend check test e2e verify screenshots demo
+.PHONY: install install-hooks dev backend frontend check test e2e verify screenshots demo \
+	release-gate db-backup db-restore cleanup-retention sbom
 
 install:
 	cd backend && uv sync --group dev
@@ -38,3 +39,20 @@ screenshots:
 demo:
 	cd backend && uv run python ../scripts/import_demo.py --input ../examples/sample_traces
 	@echo "Now open http://localhost:3000 and select the Demo workspace"
+
+release-gate:
+	./scripts/release_gate.sh
+
+db-backup:
+	./scripts/db_backup.sh
+
+db-restore:
+	@echo "Usage: make db-restore BACKUP=<path-to-backup-file>"
+	@test -n "$(BACKUP)" || (echo "BACKUP is required" && exit 1)
+	./scripts/db_restore.sh "$(BACKUP)"
+
+cleanup-retention:
+	./scripts/retention_cleanup.sh
+
+sbom:
+	./scripts/generate_sbom.sh

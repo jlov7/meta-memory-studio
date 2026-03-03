@@ -3,7 +3,7 @@
 import json
 
 from sqlalchemy import text
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.config import settings
 from app.ingest.hasher import build_chain
@@ -44,12 +44,35 @@ def run_pipeline(
         for e in events
     ]
     hashes = build_chain(filename, hashable_events)
+    final_hash = hashes[-1] if hashes else ""
+
+    # Idempotent ingest: if this exact content hash already exists in the workspace,
+    # return success without creating duplicate raw/derived records.
+    existing_raw_file = session.exec(
+        select(RawFile)
+        .where(RawFile.workspace_id == workspace_id)
+        .where(RawFile.sha256_hash == final_hash)
+        .order_by(RawFile.imported_at.desc())  # type: ignore[attr-defined]
+    ).first()
+    if existing_raw_file:
+        return {
+            "success": True,
+            "raw_file_id": existing_raw_file.id,
+            "event_count": existing_raw_file.event_count,
+            "run_count": 0,
+            "memory_count": 0,
+            "pii_level": existing_raw_file.pii_level,
+            "hash_valid": True,
+            "duplicate": True,
+            "duplicate_of_raw_file_id": existing_raw_file.id,
+            "errors": [],
+        }
 
     # 4. Store raw file
     raw_file = RawFile(
         workspace_id=workspace_id,
         filename=filename,
-        sha256_hash=hashes[-1] if hashes else "",
+        sha256_hash=final_hash,
         event_count=len(events),
         pii_level=pii_level,
     )
@@ -215,5 +238,7 @@ def run_pipeline(
         "memory_count": len(memory_items),
         "pii_level": pii_level,
         "hash_valid": True,
+        "duplicate": False,
+        "duplicate_of_raw_file_id": None,
         "errors": [],
     }

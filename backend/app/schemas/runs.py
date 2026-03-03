@@ -19,6 +19,8 @@ class RunSummary(BaseModel):
 class RunList(BaseModel):
     runs: list[RunSummary]
     total: int
+    limit: int
+    offset: int
 
 
 class TimelineStep(BaseModel):
