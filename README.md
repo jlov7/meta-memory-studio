@@ -696,6 +696,6 @@ MIT © 2026 MetaMemory Studio Contributors
 
 *Built with [FastAPI](https://fastapi.tiangolo.com/), [Next.js](https://nextjs.org/), and a deep conviction that agents deserve better memory hygiene.*
 
-**[Documentation](docs/) · [API Reference](http://localhost:8000/docs) · [Report a Bug](https://github.com/jlov7/meta-memory-studio/issues)**
+**[Documentation](docs/) · [Pre-Release Report](docs/PRE_RELEASE_REPORT.md) · [API Reference](http://localhost:8000/docs) · [Report a Bug](https://github.com/jlov7/meta-memory-studio/issues)**
 
 </div>
